@@ -1,29 +1,31 @@
 require('dotenv').config();
 const express = require('express');
-const { OpenAI } = require('openai');
+const { Configuration, OpenAIApi } = require('openai');
 const cors = require('cors');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
+const configuration = new Configuration({
+  apiKey: process.env.OPENAI_API_KEY,
 });
+
+const openai = new OpenAIApi(configuration);
 
 app.post('/', async (req, res) => {
   try {
     const prompt = req.body.prompt;
 
-    const completion = await openai.chat.completions.create({
+    const completion = await openai.createChatCompletion({
+      model: 'gpt-3.5-turbo',
       messages: [{ role: 'user', content: prompt }],
-      model: 'gpt-3.5-turbo'
     });
 
-    res.json({ response: completion.choices[0].message.content });
+    res.json({ response: completion.data.choices[0].message.content });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Error en el servidor.' });
+    console.error('Error en el servidor:', error.message);
+    res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
 
